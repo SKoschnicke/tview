@@ -54,6 +54,15 @@ type InputField struct {
 	// The text color of the placeholder.
 	placeholderTextColor tcell.Color
 
+	// The background color of the input area when it has focus.
+	fieldBackgroundColorActivated tcell.Color
+
+	// The text color of the input area when it has focus.
+	fieldTextColorActivated tcell.Color
+
+	// The text color of the placeholder when the input area has focus.
+	placeholderTextColorActivated tcell.Color
+
 	// The screen width of the label area. A value of 0 means use the width of
 	// the label text.
 	labelWidth int
@@ -172,13 +181,34 @@ func (i *InputField) SetPlaceholderTextColor(color tcell.Color) *InputField {
 	return i
 }
 
+// SetFieldBackgroundColorActivated sets the background color of the input area when it has focus.
+func (i *InputField) SetFieldBackgroundColorActivated(color tcell.Color) *InputField {
+	i.fieldBackgroundColorActivated = color
+	return i
+}
+
+// SetFieldTextColorActivated sets the text color of the input area when it has focus.
+func (i *InputField) SetFieldTextColorActivated(color tcell.Color) *InputField {
+	i.fieldTextColorActivated = color
+	return i
+}
+
+// SetPlaceholderTextColorActivated sets the text color of placeholder text when the input area has focus.
+func (i *InputField) SetPlaceholderTextColorActivated(color tcell.Color) *InputField {
+	i.placeholderTextColorActivated = color
+	return i
+}
+
 // SetFormAttributes sets attributes shared by all form items.
 func (i *InputField) SetFormAttributes(labelWidth int, labelColor, bgColor, fieldTextColor, fieldBgColor tcell.Color) FormItem {
 	i.labelWidth = labelWidth
 	i.labelColor = labelColor
 	i.backgroundColor = bgColor
-	i.fieldTextColor = fieldTextColor
-	i.fieldBackgroundColor = fieldBgColor
+	/*
+		   set these directly in the input field, because we now also have activated colors
+			i.fieldTextColor = fieldTextColor
+			i.fieldBackgroundColor = fieldBgColor
+	*/
 	return i
 }
 
@@ -337,6 +367,11 @@ func (i *InputField) Draw(screen tcell.Screen) {
 		fieldWidth = rightLimit - x
 	}
 	fieldStyle := tcell.StyleDefault.Background(i.fieldBackgroundColor)
+	fieldTextColor := i.fieldTextColor
+	if i.HasFocus() {
+		fieldStyle = tcell.StyleDefault.Background(tcell.ColorWhite.TrueColor())
+		fieldTextColor = tcell.ColorBlack.TrueColor()
+	}
 	for index := 0; index < fieldWidth; index++ {
 		screen.SetContent(x+index, y, ' ', nil, fieldStyle)
 	}
@@ -355,7 +390,7 @@ func (i *InputField) Draw(screen tcell.Screen) {
 		}
 		if fieldWidth >= stringWidth(text) {
 			// We have enough space for the full text.
-			Print(screen, Escape(text), x, y, fieldWidth, AlignLeft, i.fieldTextColor)
+			Print(screen, Escape(text), x, y, fieldWidth, AlignLeft, fieldTextColor)
 			i.offset = 0
 			iterateString(text, func(main rune, comb []rune, textPos, textWidth, screenPos, screenWidth int) bool {
 				if textPos >= i.cursorPos {
@@ -393,7 +428,7 @@ func (i *InputField) Draw(screen tcell.Screen) {
 				}
 				return false
 			})
-			Print(screen, Escape(text[i.offset:]), x, y, fieldWidth, AlignLeft, i.fieldTextColor)
+			Print(screen, Escape(text[i.offset:]), x, y, fieldWidth, AlignLeft, fieldTextColor)
 		}
 	}
 
